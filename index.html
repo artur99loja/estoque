@@ -2,92 +2,86 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Sistema de Estoque</title>
+
+<!-- OTIMIZAÇÃO IPHONE -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<title>Estoque</title>
+
+<link rel="apple-touch-icon" href="logo.png">
 
 <style>
-body {
-    font-family: Arial;
-    background: linear-gradient(135deg, #0a1f44, #1b5fbd);
+body{
     margin:0;
+    font-family:Arial;
+    background:linear-gradient(135deg,#0a1f44,#1b5fbd);
 }
 
-/* LOGIN */
-.login {
-    max-width:300px;
-    margin:150px auto;
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    text-align:center;
-}
-
-.login input {
-    width:90%;
-    padding:10px;
-    margin:10px 0;
-}
-
-/* SISTEMA */
-.container {
-    display:none;
-    max-width:800px;
-    margin:80px auto;
-    background:white;
-    padding:25px;
-    border-radius:15px;
-}
-
-.logo {
+/* LOGO */
+.logo{
     position:fixed;
     top:10px;
     left:10px;
-    width:120px;
+    width:90px;
 }
 
-input, select {
-    width:100%;
-    padding:10px;
-    margin:5px 0;
+/* CARD */
+.container{
+    margin:80px 10px;
+    background:white;
+    padding:20px;
+    border-radius:15px;
 }
 
-button {
+/* INPUT */
+input,select{
     width:100%;
-    padding:10px;
+    padding:15px;
     margin:5px 0;
-    background:#0a1f44;
-    color:white;
+    font-size:16px;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+/* BOTÃO */
+button{
+    width:100%;
+    padding:15px;
+    margin:6px 0;
+    font-size:18px;
     border:none;
-    cursor:pointer;
-}
-
-table {
-    width:100%;
-    border-collapse: collapse;
-    margin-top:10px;
-}
-
-th {
+    border-radius:12px;
     background:#0a1f44;
     color:white;
-    cursor:pointer;
 }
 
-td, th {
-    padding:8px;
-    border-bottom:1px solid #ddd;
+/* TABELA */
+table{
+    width:100%;
+    margin-top:10px;
+    border-collapse:collapse;
+}
+
+th{
+    background:#0a1f44;
+    color:white;
+}
+
+td,th{
+    padding:10px;
     text-align:center;
+    border-bottom:1px solid #ddd;
 }
 
-.total {
-    background:#eee;
+.total{
     font-weight:bold;
+    background:#eee;
 }
 
-.delete {
-    background:red;
-}
-
-.bottom {
+/* BOTÃO FIXO */
+.bottom{
     position:fixed;
     bottom:10px;
     left:10px;
@@ -99,72 +93,28 @@ td, th {
 
 <body>
 
-<!-- LOGIN -->
-<div class="login" id="login">
-<h2>🔐 Login</h2>
-<input id="user" placeholder="Usuário" onkeypress="enterLogin(event)">
-<input id="pass" type="password" placeholder="Senha" onkeypress="enterLogin(event)">
-<button onclick="logar()">Entrar</button>
-</div>
-
-<!-- LOGO -->
 <img src="logo.png" class="logo">
 
-<!-- SISTEMA -->
-<div class="container" id="sistema">
+<div class="container">
 
-<button onclick="sair()" style="background:red;">Sair</button>
-
-<h2>💼 Controle de Estoque</h2>
+<h2>📦 Estoque</h2>
 
 <select id="produto"></select>
 <input id="qtd" type="number" placeholder="Quantidade">
 <input id="preco" placeholder="Valor">
 
-<button onclick="entrada()">Salvar Item</button>
+<button onclick="entrada()">Salvar</button>
 <button onclick="mostrar()">Ver Estoque</button>
-<button onclick="abrirLevantamento()">Levantamento</button>
-<button onclick="verHistorico()">Verificação</button>
-<button onclick="addItem()">➕ Novo Item</button>
 
 <div id="lista"></div>
+
 </div>
 
-<button class="bottom" onclick="zerar()">Zerar Estoque</button>
+<button class="bottom" onclick="zerar()">Zerar</button>
 
 <script>
 
-// LOGIN
-function logar(){
-    let u=user.value.trim();
-    let p=pass.value.trim();
-
-    if(u==="betim" && p==="123"){
-        login.style.display="none";
-        sistema.style.display="block";
-    } else {
-        alert("Login inválido");
-        user.value="";
-        pass.value="";
-        user.focus();
-    }
-}
-
-function enterLogin(e){
-    if(e.key==="Enter") logar();
-}
-
-function sair(){
-    if(confirm("Deseja sair?")){
-        sistema.style.display="none";
-        login.style.display="block";
-        user.value="";
-        pass.value="";
-    }
-}
-
-// DADOS
-let nomes = JSON.parse(localStorage.getItem("nomes")) || {
+let nomes={
     camara_26:"Câmara 26",
     camara_20:"Câmara 20",
     cola:"Cola",
@@ -172,235 +122,76 @@ let nomes = JSON.parse(localStorage.getItem("nomes")) || {
     remendo_grande:"Remendo Grande"
 };
 
-let estoque = JSON.parse(localStorage.getItem("estoque")) || {};
-let historico = JSON.parse(localStorage.getItem("historico")) || {};
-let ordem="produto";
-let levTemp={};
+let estoque=JSON.parse(localStorage.getItem("estoque"))||{};
 
-// SALVAR
 function salvar(){
     localStorage.setItem("estoque",JSON.stringify(estoque));
-    localStorage.setItem("nomes",JSON.stringify(nomes));
-    localStorage.setItem("historico",JSON.stringify(historico));
 }
 
-// SELECT
 function atualizar(){
     let html='<option value="">Escolha</option>';
-    for(let i in nomes) html+=`<option value="${i}">${nomes[i]}</option>`;
+    for(let i in nomes){
+        html+=`<option value="${i}">${nomes[i]}</option>`;
+    }
     produto.innerHTML=html;
 }
 
-// COD ÚNICO
-function cod(){
-    let usados = Object.values(estoque).map(i => i.cod);
-    let novo;
-    do {
-        novo = Math.floor(Math.random()*1000)+1;
-    } while(usados.includes(novo));
-    return novo;
-}
-
-// ENTRADA
 function entrada(){
     let p=produto.value;
     let q=parseInt(qtd.value);
     let v=parseFloat(preco.value.replace(",","."));
 
-    if(!p||!q||!v) return alert("Preencha tudo");
+    if(!p||!q||!v) return alert("Preencha");
 
-    if(!estoque[p]) estoque[p]={qtd:0,valor:0,cod:cod()};
+    if(!estoque[p]) estoque[p]={qtd:0,valor:0};
 
     estoque[p].qtd+=q;
     estoque[p].valor=v;
 
     salvar();
-    alert("Item salvo");
 
-    produto.value=""; qtd.value=""; preco.value="";
+    alert("Salvo");
+
+    produto.value="";
+    qtd.value="";
+    preco.value="";
 }
 
-// ORDENAR
-function ordenar(d){
-    return d.sort((a,b)=>{
-        if(ordem==="cod") return a.cod-b.cod;
-        if(ordem==="qtd") return b.qtd-a.qtd;
-        if(ordem==="produto") return a.nome.localeCompare(b.nome);
-        if(ordem==="valor") return b.valor-a.valor;
-        if(ordem==="total") return (b.qtd*b.valor)-(a.qtd*a.valor);
-    });
-}
-
-// MOSTRAR
 function mostrar(){
-    let dados=[]; let total=0;
+    let total=0;
+
+    let html="<table><tr><th>Qtd</th><th>Produto</th><th>Unit</th><th>Total</th></tr>";
 
     for(let i in nomes){
-        let item=estoque[i]||{qtd:0,valor:0,cod:cod()};
-        dados.push({id:i,nome:nomes[i],...item});
-        estoque[i]=dados[dados.length-1];
-    }
+        let item=estoque[i]||{qtd:0,valor:0};
+        let t=item.qtd*item.valor;
 
-    dados=ordenar(dados);
+        total+=t;
 
-    let html="<table><tr>";
-    html+=`
-    <th onclick="set('cod')">Cod</th>
-    <th onclick="set('qtd')">Qtd</th>
-    <th onclick="set('produto')">Produto</th>
-    <th onclick="set('valor')">Unit</th>
-    <th onclick="set('total')">Total</th>
-    <th>Ação</th>`;
-
-    dados.forEach(i=>{
-        let t=i.qtd*i.valor; total+=t;
         html+=`
         <tr>
-        <td>${i.cod}</td>
-        <td>${i.qtd}</td>
-        <td>${i.nome}</td>
-        <td>${i.valor.toFixed(2)}</td>
+        <td>${item.qtd}</td>
+        <td>${nomes[i]}</td>
+        <td>${item.valor.toFixed(2)}</td>
         <td>${t.toFixed(2)}</td>
-        <td><button class="delete" onclick="del('${i.id}')">🗑️</button></td>
         </tr>`;
-    });
+    }
 
-    html+=`<tr class="total"><td colspan="4">TOTAL</td><td colspan="2">R$ ${total.toFixed(2)}</td></tr></table>`;
+    html+=`<tr class="total"><td colspan="3">TOTAL</td><td>${total.toFixed(2)}</td></tr></table>`;
+
     lista.innerHTML=html;
 }
 
-function set(o){ ordem=o; mostrar(); }
-
-// DELETAR
-function del(id){
-    if(confirm("Excluir item?")){
-        delete nomes[id];
-        delete estoque[id];
-        salvar();
-        atualizar();
-        mostrar();
-    }
-}
-
-// NOVO ITEM (SEM DUPLICAR)
-function addItem(){
-    let n=prompt("Nome do item:");
-    if(!n) return;
-
-    n = n.trim();
-
-    for(let i in nomes){
-        if(nomes[i].toLowerCase() === n.toLowerCase()){
-            alert("Item já existe!");
-            return;
-        }
-    }
-
-    let id=n.toLowerCase().replace(/\s+/g,"_");
-
-    nomes[id]=n;
-    estoque[id]={qtd:0,valor:0,cod:cod()};
-
-    salvar();
-    atualizar();
-    alert("Item adicionado!");
-}
-
-// LEVANTAMENTO COMPLETO
-function abrirLevantamento(){
-    let html="<h3>Levantamento</h3>";
-
-    for(let i in nomes){
-        let qtdEstoque = estoque[i]?.qtd || 0;
-        let valor = estoque[i]?.valor || 0;
-
-        html+=`
-        <div style="margin:10px 0; border-bottom:1px solid #ccc;">
-        <b>${nomes[i]}</b><br>
-        Estoque: ${qtdEstoque} | Unit: R$ ${valor.toFixed(2)}<br>
-
-        Vendido: 
-        <input type="number" id="l_${i}" oninput="calcItem('${i}', this.value)">
-        <span id="t_${i}">R$ 0.00</span>
-        </div>`;
-    }
-
-    html+=`<button onclick="calc()">Calcular Total</button>`;
-    lista.innerHTML=html;
-}
-
-// CALCULAR POR ITEM
-function calcItem(id, valor){
-    let q=parseInt(valor)||0;
-    let v=estoque[id]?.valor||0;
-    let total=q*v;
-
-    document.getElementById("t_"+id).innerText="R$ "+total.toFixed(2);
-}
-
-// TOTAL GERAL
-function calc(){
-    let total=0; levTemp={};
-
-    for(let i in nomes){
-        let q=parseInt(document.getElementById("l_"+i).value)||0;
-        let v=estoque[i]?.valor||0;
-
-        total+=q*v;
-        levTemp[i]=q;
-    }
-
-    lista.innerHTML=`<h3>Total: R$ ${total.toFixed(2)}</h3>
-    <button onclick="final(${total})">Levantar</button>`;
-}
-
-// FINALIZAR
-function final(total){
-    for(let i in levTemp){
-        if(estoque[i]){
-            estoque[i].qtd-=levTemp[i];
-            if(estoque[i].qtd<0) estoque[i].qtd=0;
-        }
-    }
-
-    let data=new Date().toLocaleString();
-    historico[data]=(historico[data]||0)+total;
-
-    salvar();
-    mostrar();
-}
-
-// HISTÓRICO
-function verHistorico(){
-    let html="<h3>Histórico</h3>";
-
-    for(let d in historico){
-        html+=`<p>${d} - R$ ${historico[d].toFixed(2)}</p>`;
-    }
-
-    html+=`<button onclick="zerarHist()">Zerar Histórico</button>`;
-    lista.innerHTML=html;
-}
-
-function zerarHist(){
-    if(confirm("Apagar histórico?")){
-        historico={};
-        salvar();
-        verHistorico();
-    }
-}
-
-// ZERAR
 function zerar(){
-    if(confirm("Zerar estoque?")){
+    if(confirm("Zerar tudo?")){
         estoque={};
         salvar();
         mostrar();
     }
 }
 
-// INIT
 atualizar();
+mostrar();
 
 </script>
 
