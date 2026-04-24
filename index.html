@@ -2,41 +2,27 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-
-<!-- OTIMIZAÇÃO IPHONE -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-<title>Estoque</title>
-
-<link rel="apple-touch-icon" href="logo.png">
+<title>Estoque Mobile</title>
 
 <style>
 body{
     margin:0;
     font-family:Arial;
-    background:linear-gradient(135deg,#0a1f44,#1b5fbd);
+    background:#0a1f44;
+    color:white;
 }
 
-/* LOGO */
-.logo{
-    position:fixed;
-    top:10px;
-    left:10px;
-    width:90px;
-}
-
-/* CARD */
 .container{
-    margin:80px 10px;
+    margin:20px;
     background:white;
+    color:black;
     padding:20px;
     border-radius:15px;
 }
 
-/* INPUT */
-input,select{
+input, select{
     width:100%;
     padding:15px;
     margin:5px 0;
@@ -45,7 +31,6 @@ input,select{
     border:1px solid #ccc;
 }
 
-/* BOTÃO */
 button{
     width:100%;
     padding:15px;
@@ -57,7 +42,6 @@ button{
     color:white;
 }
 
-/* TABELA */
 table{
     width:100%;
     margin-top:10px;
@@ -75,25 +59,27 @@ td,th{
     border-bottom:1px solid #ddd;
 }
 
+.edit{
+    width:60px;
+    text-align:center;
+}
+
+.delete{
+    background:red;
+    color:white;
+    border:none;
+    padding:6px 10px;
+    border-radius:6px;
+}
+
 .total{
     font-weight:bold;
     background:#eee;
-}
-
-/* BOTÃO FIXO */
-.bottom{
-    position:fixed;
-    bottom:10px;
-    left:10px;
-    width:180px;
-    background:red;
 }
 </style>
 </head>
 
 <body>
-
-<img src="logo.png" class="logo">
 
 <div class="container">
 
@@ -109,8 +95,6 @@ td,th{
 <div id="lista"></div>
 
 </div>
-
-<button class="bottom" onclick="zerar()">Zerar</button>
 
 <script>
 
@@ -141,7 +125,7 @@ function entrada(){
     let q=parseInt(qtd.value);
     let v=parseFloat(preco.value.replace(",","."));
 
-    if(!p||!q||!v) return alert("Preencha");
+    if(!p||!q||!v) return alert("Preencha tudo");
 
     if(!estoque[p]) estoque[p]={qtd:0,valor:0};
 
@@ -150,42 +134,72 @@ function entrada(){
 
     salvar();
 
-    alert("Salvo");
+    alert("Salvo!");
 
     produto.value="";
     qtd.value="";
     preco.value="";
 }
 
+// MOSTRAR + EDITAR + DELETAR
 function mostrar(){
     let total=0;
 
-    let html="<table><tr><th>Qtd</th><th>Produto</th><th>Unit</th><th>Total</th></tr>";
+    let html="<table><tr><th>Qtd</th><th>Produto</th><th>Total</th><th></th></tr>";
 
     for(let i in nomes){
+
         let item=estoque[i]||{qtd:0,valor:0};
         let t=item.qtd*item.valor;
-
         total+=t;
 
         html+=`
         <tr>
-        <td>${item.qtd}</td>
-        <td>${nomes[i]}</td>
-        <td>${item.valor.toFixed(2)}</td>
-        <td>${t.toFixed(2)}</td>
+            <td>
+                <input class="edit" type="number" value="${item.qtd}"
+                onblur="editar('${i}', this.value)">
+            </td>
+            <td>${nomes[i]}</td>
+            <td>${t.toFixed(2)}</td>
+            <td>
+                <button class="delete" onclick="deletar('${i}')">🗑️</button>
+            </td>
         </tr>`;
     }
 
-    html+=`<tr class="total"><td colspan="3">TOTAL</td><td>${total.toFixed(2)}</td></tr></table>`;
+    html+=`
+    <tr class="total">
+        <td colspan="2">TOTAL</td>
+        <td>${total.toFixed(2)}</td>
+        <td></td>
+    </tr>`;
+
+    html+="</table>";
 
     lista.innerHTML=html;
 }
 
-function zerar(){
-    if(confirm("Zerar tudo?")){
-        estoque={};
+// EDITAR
+function editar(id, valor){
+    let q=parseInt(valor);
+
+    if(isNaN(q) || q < 0){
+        alert("Quantidade inválida");
+        mostrar();
+        return;
+    }
+
+    estoque[id].qtd=q;
+    salvar();
+}
+
+// DELETAR ITEM
+function deletar(id){
+    if(confirm("Deseja apagar este item?")){
+        delete estoque[id];
+        delete nomes[id];
         salvar();
+        atualizar();
         mostrar();
     }
 }
