@@ -2,49 +2,70 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Estoque Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<title>Controle de Estoque</title>
 
 <style>
+
 body{
     margin:0;
-    font-family:Arial;
+    font-family:-apple-system, BlinkMacSystemFont, sans-serif;
     background:#0a1f44;
-    color:white;
 }
 
+/* LOGO */
+.logo{
+    position:fixed;
+    top:10px;
+    left:10px;
+    width:70px;
+}
+
+/* CONTAINER */
 .container{
-    margin:20px;
+    margin:90px 10px 20px 10px;
     background:white;
-    color:black;
     padding:20px;
-    border-radius:15px;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
 }
 
-input, select{
+/* TITULO */
+h2{
+    text-align:center;
+    color:#0a1f44;
+}
+
+/* INPUT */
+input,select{
     width:100%;
     padding:15px;
-    margin:5px 0;
-    font-size:16px;
-    border-radius:10px;
+    margin:6px 0;
+    border-radius:12px;
     border:1px solid #ccc;
+    font-size:16px;
 }
 
+/* BOTÕES */
 button{
     width:100%;
     padding:15px;
     margin:6px 0;
-    font-size:18px;
     border:none;
     border-radius:12px;
+    font-size:16px;
+    font-weight:bold;
     background:#0a1f44;
     color:white;
 }
 
+/* TABELA */
 table{
     width:100%;
-    margin-top:10px;
+    margin-top:15px;
     border-collapse:collapse;
 }
 
@@ -54,42 +75,49 @@ th{
 }
 
 td,th{
-    padding:10px;
+    padding:12px;
     text-align:center;
-    border-bottom:1px solid #ddd;
+    border-bottom:1px solid #eee;
 }
 
+/* EDIT */
 .edit{
     width:60px;
+    padding:8px;
     text-align:center;
+    border-radius:8px;
 }
 
+/* DELETE */
 .delete{
-    background:red;
-    color:white;
-    border:none;
-    padding:6px 10px;
-    border-radius:6px;
+    background:#d9534f;
+    padding:8px 12px;
+    border-radius:8px;
 }
 
+/* TOTAL */
 .total{
+    background:#f4f4f4;
     font-weight:bold;
-    background:#eee;
 }
+
 </style>
 </head>
 
 <body>
 
+<!-- LOGO -->
+<img src="logo.png" class="logo">
+
 <div class="container">
 
-<h2>📦 Estoque</h2>
+<h2>📦 Controle de Estoque</h2>
 
 <select id="produto"></select>
 <input id="qtd" type="number" placeholder="Quantidade">
-<input id="preco" placeholder="Valor">
+<input id="preco" placeholder="Valor (ex: 17,50)">
 
-<button onclick="entrada()">Salvar</button>
+<button onclick="entrada()">Salvar Item</button>
 <button onclick="mostrar()">Ver Estoque</button>
 
 <div id="lista"></div>
@@ -98,6 +126,7 @@ td,th{
 
 <script>
 
+// ITENS
 let nomes={
     camara_26:"Câmara 26",
     camara_20:"Câmara 20",
@@ -106,26 +135,33 @@ let nomes={
     remendo_grande:"Remendo Grande"
 };
 
+// ESTOQUE
 let estoque=JSON.parse(localStorage.getItem("estoque"))||{};
 
+// SALVAR
 function salvar(){
     localStorage.setItem("estoque",JSON.stringify(estoque));
 }
 
+// ATUALIZAR SELECT
 function atualizar(){
-    let html='<option value="">Escolha</option>';
+    let html='<option value="">Escolha o item</option>';
     for(let i in nomes){
         html+=`<option value="${i}">${nomes[i]}</option>`;
     }
     produto.innerHTML=html;
 }
 
+// ADICIONAR / ENTRADA
 function entrada(){
     let p=produto.value;
     let q=parseInt(qtd.value);
     let v=parseFloat(preco.value.replace(",","."));
 
-    if(!p||!q||!v) return alert("Preencha tudo");
+    if(!p||!q||!v){
+        alert("Preencha todos os campos");
+        return;
+    }
 
     if(!estoque[p]) estoque[p]={qtd:0,valor:0};
 
@@ -134,23 +170,33 @@ function entrada(){
 
     salvar();
 
-    alert("Salvo!");
+    alert("Item salvo!");
 
     produto.value="";
     qtd.value="";
     preco.value="";
 }
 
-// MOSTRAR + EDITAR + DELETAR
+// MOSTRAR ESTOQUE
 function mostrar(){
     let total=0;
 
-    let html="<table><tr><th>Qtd</th><th>Produto</th><th>Total</th><th></th></tr>";
+    let html=`
+    <table>
+    <tr>
+        <th>Qtd</th>
+        <th>Produto</th>
+        <th>Unit</th>
+        <th>Total</th>
+        <th></th>
+    </tr>`;
 
     for(let i in nomes){
 
         let item=estoque[i]||{qtd:0,valor:0};
-        let t=item.qtd*item.valor;
+        let unit=item.valor || 0;
+        let t=item.qtd * unit;
+
         total+=t;
 
         html+=`
@@ -159,8 +205,13 @@ function mostrar(){
                 <input class="edit" type="number" value="${item.qtd}"
                 onblur="editar('${i}', this.value)">
             </td>
+
             <td>${nomes[i]}</td>
-            <td>${t.toFixed(2)}</td>
+
+            <td>R$ ${unit.toFixed(2)}</td>
+
+            <td>R$ ${t.toFixed(2)}</td>
+
             <td>
                 <button class="delete" onclick="deletar('${i}')">🗑️</button>
             </td>
@@ -169,8 +220,8 @@ function mostrar(){
 
     html+=`
     <tr class="total">
-        <td colspan="2">TOTAL</td>
-        <td>${total.toFixed(2)}</td>
+        <td colspan="3">TOTAL</td>
+        <td>R$ ${total.toFixed(2)}</td>
         <td></td>
     </tr>`;
 
@@ -179,11 +230,11 @@ function mostrar(){
     lista.innerHTML=html;
 }
 
-// EDITAR
+// EDITAR QUANTIDADE
 function editar(id, valor){
     let q=parseInt(valor);
 
-    if(isNaN(q) || q < 0){
+    if(isNaN(q)||q<0){
         alert("Quantidade inválida");
         mostrar();
         return;
@@ -204,6 +255,7 @@ function deletar(id){
     }
 }
 
+// INICIAR
 atualizar();
 mostrar();
 
